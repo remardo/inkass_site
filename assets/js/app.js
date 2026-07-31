@@ -60,7 +60,7 @@
 
     function showSlide(index) {
       slides.forEach(function(s, i) {
-        s.style.display = i === index ? 'flex' : 'none';
+        s.classList.toggle('active', i === index);
       });
       if (dotsContainer) {
         var dots = dotsContainer.querySelectorAll('span');
@@ -75,17 +75,16 @@
       if (dotsContainer) {
         for (var i = 0; i < slides.length; i++) {
           var dot = document.createElement('span');
-          if (i === 0) dot.classList.add('active');
           dot.addEventListener('click', function() {
-            var idx = Array.prototype.indexOf.call(dotsContainer.querySelectorAll('span'), this);
-            current = idx;
+            current = Array.prototype.indexOf.call(dotsContainer.querySelectorAll('span'), this);
             showSlide(current);
           });
           dotsContainer.appendChild(dot);
         }
       }
 
-      showSlide(0);
+      // Mark first slide visible
+      slides[0].classList.add('active');
 
       // Auto-rotate
       setInterval(function() {
