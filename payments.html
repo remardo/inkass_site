@@ -53,9 +53,36 @@
 </header>
 
 <main>
-  <section class="page-header bg-alt">
+  <section class="page-header">
     <div class="container">
       <h1>Способы оплаты</h1>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="yookassa-pay">
+        <h3 class="yookassa-pay__title">Онлайн-оплата банковской картой</h3>
+        <p class="yookassa-pay__sub">Безопасная оплата через ЮKassa — карты Мир, Visa, Mastercard и другие способы.</p>
+        <form id="yookassa-form" novalidate>
+          <div class="form-group">
+            <label for="yk-amount">Сумма платежа, ₽</label>
+            <input type="number" id="yk-amount" name="amount" class="form-control" min="1" step="0.01" placeholder="1000" required>
+          </div>
+          <div class="form-group">
+            <input type="text" name="name" class="form-control" placeholder="ФИО (необязательно)">
+          </div>
+          <div class="form-group">
+            <input type="text" name="contract" class="form-control" placeholder="Номер договора (необязательно)">
+          </div>
+          <div class="form-group">
+            <input type="email" name="email" class="form-control" placeholder="Email для чека (необязательно)">
+          </div>
+          <button type="submit" class="btn btn-default btn-block">Перейти к оплате</button>
+          <div class="yookassa-pay__note">Оплата проходит на защищённой странице ЮKassa. Нажимая кнопку, вы соглашаетесь с <a href="#">условиями</a>.</div>
+          <div id="yookassa-msg" class="yookassa-pay__msg" role="status"></div>
+        </form>
+      </div>
     </div>
   </section>
 
@@ -85,7 +112,6 @@
               <div class="form-group">
                 <label>Регион:</label>
                 <select class="form-control">
-                  <option>Нижегородская область</option>
                   <option>Чувашская Республика</option>
                   <option>Республика Марий Эл</option>
                 </select>
@@ -177,7 +203,6 @@
         <div class="footer-contacts">
           <p><i class="fas fa-envelope"></i><a href="mailto:mail@incollect.ru">mail@incollect.ru</a></p>
           <p><strong>Чебоксарское подразделение</strong><br>428022, Чувашская Республика, г. Чебоксары, ул. Ярославская, 72, офис. 130</p>
-          <p><strong>Нижегородское подразделение</strong><br>Нижний Новгород, ул. Обухова 11-13, офис 303</p>
           <p>Юридический адрес: 428022, Чувашская Республика, г. Чебоксары, ул. Ярославская, 72, офис. 130</p>
           <p>С политикой обработки персональных данных можно ознакомиться <a href="#">здесь</a>.</p>
         </div>
@@ -207,7 +232,6 @@
         <div class="form-group">
           <label>Регион:</label>
           <select class="form-control">
-            <option>Нижегородская область</option>
             <option>Чувашская Республика</option>
             <option>Республика Марий Эл</option>
           </select>
@@ -270,7 +294,6 @@
         <div class="form-group">
           <label>Регион:</label>
           <select class="form-control">
-            <option>Нижегородская область</option>
             <option>Чувашская Республика</option>
             <option>Республика Марий Эл</option>
           </select>
@@ -365,5 +388,41 @@
 </div>
 
 <script src="assets/js/app.js"></script>
+<script>
+(function () {
+  var form = document.getElementById('yookassa-form');
+  if (!form) return;
+  var msg = document.getElementById('yookassa-msg');
+  var btn = form.querySelector('button[type="submit"]');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var amount = parseFloat(form.amount.value);
+    if (!amount || amount <= 0) {
+      msg.textContent = 'Укажите корректную сумму';
+      msg.className = 'yookassa-pay__msg is-error';
+      return;
+    }
+    msg.textContent = 'Создаём платёж…';
+    msg.className = 'yookassa-pay__msg';
+    btn.disabled = true;
+    fetch('/pay/create.php', { method: 'POST', body: new URLSearchParams(new FormData(form)) })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (res) {
+        if (res.ok && res.data.confirmation_url) {
+          window.location.href = res.data.confirmation_url;
+        } else {
+          msg.textContent = 'Не удалось создать платёж' + (res.data && res.data.error ? ': ' + res.data.error : '');
+          msg.className = 'yookassa-pay__msg is-error';
+          btn.disabled = false;
+        }
+      })
+      .catch(function () {
+        msg.textContent = 'Ошибка сети, попробуйте позже';
+        msg.className = 'yookassa-pay__msg is-error';
+        btn.disabled = false;
+      });
+  });
+})();
+</script>
 </body>
 </html>
